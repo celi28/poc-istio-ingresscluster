@@ -13,6 +13,30 @@ echo "Project : $PROJECT"
 echo "Region  : $REGION"
 echo ""
 
+# ── 0. Ensure Application Default Credentials are configured ─────────────────
+# Terraform's google provider uses ADC — separate from the gcloud CLI session.
+#
+# Option A (service account key file — recommended for CI / non-interactive):
+#   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json
+#   bash scripts/bootstrap.sh
+#
+# Option B (interactive Cloud Shell user account):
+#   Just run the script; it will open the ADC browser login.
+echo "[0/7] Configuring Application Default Credentials..."
+if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ]; then
+  echo "  Service account key: $GOOGLE_APPLICATION_CREDENTIALS"
+  # Activate for gcloud CLI commands too (e.g. gcloud builds submit)
+  gcloud auth activate-service-account \
+    --key-file="$GOOGLE_APPLICATION_CREDENTIALS" \
+    --project="$PROJECT" --quiet
+  echo "  ADC will use GOOGLE_APPLICATION_CREDENTIALS (set in environment)."
+else
+  echo "  No GOOGLE_APPLICATION_CREDENTIALS — using user ADC login."
+  gcloud auth application-default login --quiet
+fi
+echo "ADC configured."
+echo ""
+
 # ── 1. Set GCP project ────────────────────────────────────────────────────────
 echo "[1/7] Configuring gcloud project..."
 gcloud config set project "$PROJECT"
