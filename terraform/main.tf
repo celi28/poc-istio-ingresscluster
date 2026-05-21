@@ -132,6 +132,8 @@ locals {
   jwt_mock_image  = "${module.artifact_registry.repository_url}/jwt-mock:${var.jwt_mock_image_tag}"
 }
 
+# Cloud Build is used instead of local Docker to avoid Cloud Shell token limitations.
+# gcloud builds submit uploads source to GCS, builds remotely, and pushes to Artifact Registry.
 resource "null_resource" "build_ext_authz" {
   depends_on = [module.artifact_registry]
 
@@ -144,9 +146,10 @@ resource "null_resource" "build_ext_authz" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      gcloud auth configure-docker ${var.region}-docker.pkg.dev --quiet
-      docker build -t ${local.ext_authz_image} ${path.module}/../ext-authz
-      docker push ${local.ext_authz_image}
+      gcloud builds submit \
+        --tag ${local.ext_authz_image} \
+        --project ${var.project_id} \
+        ${path.module}/../ext-authz
     EOT
   }
 }
@@ -163,9 +166,10 @@ resource "null_resource" "build_jwt_mock" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      gcloud auth configure-docker ${var.region}-docker.pkg.dev --quiet
-      docker build -t ${local.jwt_mock_image} ${path.module}/../jwt-mock
-      docker push ${local.jwt_mock_image}
+      gcloud builds submit \
+        --tag ${local.jwt_mock_image} \
+        --project ${var.project_id} \
+        ${path.module}/../jwt-mock
     EOT
   }
 }
