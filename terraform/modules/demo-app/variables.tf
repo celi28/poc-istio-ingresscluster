@@ -1,1 +1,4 @@
-variable "replicas" { type = number; default = 2 }
+variable "replicas" {
+  type    = number
+  default = 2
+}

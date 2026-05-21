@@ -30,6 +30,64 @@ locals {
       context = { cluster = "workload", user = "workload" }
     }]
   })
+
+  istiod_remote_values = <<-YAML
+    global:
+      meshID: mesh1
+      multiCluster:
+        clusterName: workload-cluster
+      network: workload-network
+      remotePilotAddress: ${var.istiod_remote_address}
+    pilot:
+      enabled: false
+  YAML
+
+  eastwest_gateway_workload_values = <<-YAML
+    name: istio-eastwestgateway
+    labels:
+      app: istio-eastwestgateway
+      istio: eastwestgateway
+      topology.istio.io/network: workload-network
+    env:
+      ISTIO_META_ROUTER_MODE: sni-dnat
+    service:
+      type: LoadBalancer
+      annotations:
+        networking.gke.io/load-balancer-type: "Internal"
+      ports:
+        - name: tls
+          port: 15443
+          targetPort: 15443
+          protocol: TCP
+  YAML
+
+  internal_gateway_values = <<-YAML
+    name: istio-internalgateway
+    labels:
+      app: istio-internalgateway
+      istio: internalgateway
+    service:
+      type: LoadBalancer
+      annotations:
+        networking.gke.io/load-balancer-type: "Internal"
+        networking.gke.io/internal-load-balancer-allow-global-access: "false"
+      loadBalancerSourceRanges:
+        - "10.0.0.0/8"
+        - "172.16.0.0/12"
+      ports:
+        - name: http
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+        - name: https
+          port: 443
+          targetPort: 8443
+          protocol: TCP
+        - name: grpc
+          port: 50051
+          targetPort: 50051
+          protocol: TCP
+  YAML
 }
 
 # Applied to ingress-cluster (caller must set provider alias accordingly)
@@ -70,16 +128,7 @@ resource "helm_release" "istiod_remote" {
   wait       = true
   depends_on = [helm_release.istio_base_workload]
 
-  values = [<<-YAML
-    global:
-      meshID: mesh1
-      multiCluster:
-        clusterName: workload-cluster
-      network: workload-network
-      remotePilotAddress: ${var.istiod_remote_address}
-    pilot:
-      enabled: false
-  YAML]
+  values = [local.istiod_remote_values]
 }
 
 # EastWest gateway on workload-cluster
@@ -92,24 +141,7 @@ resource "helm_release" "eastwest_gateway_workload" {
   wait       = true
   depends_on = [helm_release.istiod_remote]
 
-  values = [<<-YAML
-    name: istio-eastwestgateway
-    labels:
-      app: istio-eastwestgateway
-      istio: eastwestgateway
-      topology.istio.io/network: workload-network
-    env:
-      ISTIO_META_ROUTER_MODE: sni-dnat
-    service:
-      type: LoadBalancer
-      annotations:
-        networking.gke.io/load-balancer-type: "Internal"
-      ports:
-        - name: tls
-          port: 15443
-          targetPort: 15443
-          protocol: TCP
-  YAML]
+  values = [local.eastwest_gateway_workload_values]
 }
 
 # EastWest cross-network gateway for workload-cluster
@@ -146,33 +178,7 @@ resource "helm_release" "internal_gateway" {
   wait       = true
   depends_on = [helm_release.istiod_remote]
 
-  values = [<<-YAML
-    name: istio-internalgateway
-    labels:
-      app: istio-internalgateway
-      istio: internalgateway
-    service:
-      type: LoadBalancer
-      annotations:
-        networking.gke.io/load-balancer-type: "Internal"
-        networking.gke.io/internal-load-balancer-allow-global-access: "false"
-      loadBalancerSourceRanges:
-        - "10.0.0.0/8"
-        - "172.16.0.0/12"
-      ports:
-        - name: http
-          port: 80
-          targetPort: 8080
-          protocol: TCP
-        - name: https
-          port: 443
-          targetPort: 8443
-          protocol: TCP
-        - name: grpc
-          port: 50051
-          targetPort: 50051
-          protocol: TCP
-  YAML]
+  values = [local.internal_gateway_values]
 }
 
 # Enable Istio sidecar injection in workload namespace
