@@ -1,0 +1,17 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-jwt
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  action: DENY
+  rules:
+    - from:
+        - source:
+            notRequestPrincipals: ["*"]
+      to:
+        - operation:
+            hosts: ["api.demo.local"]

@@ -265,34 +265,3 @@ module "demo_app" {
   }
 }
 
-# ── Istio security config — ingress-cluster ───────────────────────────────────
-
-module "istio_config" {
-  source          = "./modules/istio-config"
-  jwt_issuer_url  = "http://jwt-mock.jwt-mock.svc.cluster.local:8080"
-  jwt_jwks_uri    = "http://jwt-mock.jwt-mock.svc.cluster.local:8080/.well-known/jwks.json"
-  jwt_audience    = "api.demo.local"
-  api_host        = "api.demo.local"
-  depends_on      = [module.istio_primary, module.cert_manager_ingress]
-
-  providers = {
-    kubectl = kubectl.ingress
-  }
-}
-
-# ── PeerAuthentication PERMISSIVE — workload-cluster mesh-wide ────────────────
-
-resource "kubectl_manifest" "peer_auth_workload_mesh" {
-  provider = kubectl.workload
-  yaml_body = <<-YAML
-    apiVersion: security.istio.io/v1beta1
-    kind: PeerAuthentication
-    metadata:
-      name: default
-      namespace: istio-system
-    spec:
-      mtls:
-        mode: PERMISSIVE
-  YAML
-  depends_on = [module.istio_remote]
-}

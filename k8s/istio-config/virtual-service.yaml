@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-route
+  namespace: istio-ingress
+spec:
+  hosts:
+    - "api.demo.local"
+  gateways:
+    - external-gateway
+  http:
+    - route:
+        - destination:
+            host: demo-app.app.svc.cluster.local
+            port:
+              number: 80

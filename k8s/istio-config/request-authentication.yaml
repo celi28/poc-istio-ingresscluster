@@ -1,0 +1,15 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-external
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  jwtRules:
+    - issuer: "http://jwt-mock.jwt-mock.svc.cluster.local:8080"
+      jwksUri: "http://jwt-mock.jwt-mock.svc.cluster.local:8080/.well-known/jwks.json"
+      audiences:
+        - "api.demo.local"
+      forwardOriginalToken: false

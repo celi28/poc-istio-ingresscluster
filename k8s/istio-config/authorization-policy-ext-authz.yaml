@@ -1,0 +1,16 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ext-authz-schema
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  action: CUSTOM
+  provider:
+    name: ext-authz-schema
+  rules:
+    - to:
+        - operation:
+            hosts: ["api.demo.local"]
