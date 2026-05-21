@@ -149,6 +149,7 @@ resource "null_resource" "build_ext_authz" {
       gcloud builds submit \
         --tag ${local.ext_authz_image} \
         --project ${var.project_id} \
+        --region ${var.region} \
         ${path.module}/../ext-authz
     EOT
   }
@@ -169,6 +170,7 @@ resource "null_resource" "build_jwt_mock" {
       gcloud builds submit \
         --tag ${local.jwt_mock_image} \
         --project ${var.project_id} \
+        --region ${var.region} \
         ${path.module}/../jwt-mock
     EOT
   }
