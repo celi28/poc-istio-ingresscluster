@@ -1,0 +1,11 @@
+project_id            = "gcp-poc-prod-cc"
+region                = "europe-west1"
+ingress_cluster_name  = "ingress-cluster"
+workload_cluster_name = "workload-cluster"
+ingress_node_type     = "e2-standard-4"
+workload_node_type    = "e2-standard-2"
+ingress_node_count    = 2
+workload_node_count   = 2
+ext_authz_image_tag   = "latest"
+jwt_mock_image_tag    = "latest"
+istio_version         = "1.21.0"
