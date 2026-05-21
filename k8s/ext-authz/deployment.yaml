@@ -15,11 +15,6 @@ spec:
       labels:
         app: ext-authz
     spec:
-      tolerations:
-        - key: node-role
-          operator: Equal
-          value: ingress-cluster
-          effect: NoSchedule
       containers:
         - name: ext-authz
           image: europe-west1-docker.pkg.dev/gcp-poc-prod-cc/demo-images/ext-authz:latest

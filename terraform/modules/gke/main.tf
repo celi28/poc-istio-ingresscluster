@@ -58,15 +58,6 @@ resource "google_container_node_pool" "nodes" {
       mode = "GKE_METADATA"
     }
 
-    dynamic "taint" {
-      for_each = var.network_tag != "" ? [1] : []
-      content {
-        key    = "node-role"
-        value  = var.network_tag
-        effect = "NO_SCHEDULE"
-      }
-    }
-
     tags = var.network_tag != "" ? [var.network_tag] : []
   }
 

@@ -15,11 +15,6 @@ spec:
       labels:
         app: jwt-mock
     spec:
-      tolerations:
-        - key: node-role
-          operator: Equal
-          value: ingress-cluster
-          effect: NoSchedule
       containers:
         - name: jwt-mock
           image: europe-west1-docker.pkg.dev/gcp-poc-prod-cc/demo-images/jwt-mock:latest
