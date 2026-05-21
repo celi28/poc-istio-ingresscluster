@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ext-authz
+  namespace: ext-authz
+  labels:
+    app: ext-authz
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ext-authz
+  template:
+    metadata:
+      labels:
+        app: ext-authz
+    spec:
+      tolerations:
+        - key: node-role
+          operator: Equal
+          value: ingress-cluster
+          effect: NoSchedule
+      containers:
+        - name: ext-authz
+          image: europe-west1-docker.pkg.dev/gcp-poc-prod-cc/demo-images/ext-authz:latest
+          ports:
+            - containerPort: 9000
+              name: grpc
+          env:
+            - name: LISTEN_ADDR
+              value: ":9000"
+            - name: APICURIO_URL
+              value: "http://apicurio-registry.apicurio.svc.cluster.local:8080"
+            - name: ARTIFACT_GROUP
+              value: "demo"
+            - name: ARTIFACT_ID
+              value: "demo-api"
+            - name: CACHE_TTL
+              value: "60s"
+            - name: MAX_BODY_BYTES
+              value: "1048576"
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+          readinessProbe:
+            grpc:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            grpc:
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 10

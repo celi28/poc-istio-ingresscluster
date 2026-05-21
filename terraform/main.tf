@@ -253,31 +253,6 @@ module "apicurio" {
   }
 }
 
-# ── JWT Mock — ingress-cluster ────────────────────────────────────────────────
-
-module "jwt_mock" {
-  source     = "./modules/jwt-mock"
-  image      = local.jwt_mock_image
-  depends_on = [null_resource.build_jwt_mock, module.istio_primary]
-
-  providers = {
-    kubernetes = kubernetes.ingress
-  }
-}
-
-# ── ExtAuthz — ingress-cluster ────────────────────────────────────────────────
-
-module "ext_authz" {
-  source       = "./modules/ext-authz"
-  image        = local.ext_authz_image
-  apicurio_url = module.apicurio.apicurio_service_url
-  depends_on   = [null_resource.build_ext_authz, module.apicurio]
-
-  providers = {
-    kubernetes = kubernetes.ingress
-  }
-}
-
 # ── Demo App — workload-cluster ───────────────────────────────────────────────
 
 module "demo_app" {
@@ -294,11 +269,11 @@ module "demo_app" {
 
 module "istio_config" {
   source          = "./modules/istio-config"
-  jwt_issuer_url  = module.jwt_mock.issuer_url
-  jwt_jwks_uri    = module.jwt_mock.jwks_uri
+  jwt_issuer_url  = "http://jwt-mock.jwt-mock.svc.cluster.local:8080"
+  jwt_jwks_uri    = "http://jwt-mock.jwt-mock.svc.cluster.local:8080/.well-known/jwks.json"
   jwt_audience    = "api.demo.local"
   api_host        = "api.demo.local"
-  depends_on      = [module.istio_primary, module.ext_authz, module.jwt_mock, module.cert_manager_ingress]
+  depends_on      = [module.istio_primary, module.cert_manager_ingress]
 
   providers = {
     kubectl = kubectl.ingress
