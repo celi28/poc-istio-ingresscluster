@@ -31,6 +31,13 @@ resource "kubernetes_deployment" "jwt_mock" {
       }
 
       spec {
+        toleration {
+          key      = "node-role"
+          operator = "Equal"
+          value    = "ingress-cluster"
+          effect   = "NoSchedule"
+        }
+
         container {
           name  = "jwt-mock"
           image = var.image

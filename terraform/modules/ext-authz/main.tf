@@ -31,6 +31,13 @@ resource "kubernetes_deployment" "ext_authz" {
       }
 
       spec {
+        toleration {
+          key      = "node-role"
+          operator = "Equal"
+          value    = "ingress-cluster"
+          effect   = "NoSchedule"
+        }
+
         container {
           name  = "ext-authz"
           image = var.image
